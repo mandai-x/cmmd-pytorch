@@ -1,0 +1,34 @@
+[project]
+name = "cmmd-pytorch"
+version = "0.1.0"
+description = "PyTorch implementation of CLIP Maximum Mean Discrepancy (CMMD) for evaluating image generation models"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Google Research", email = "google-research@google.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "torch>=1.12.0",
+    "transformers",
+    "accelerate",
+    "Pillow",
+    "tqdm",
+    "numpy",
+    "click",
+]

@@ -25,6 +25,20 @@ _SIGMA = 10
 _SCALE = 1000
 
 
+def get_device():
+    """Get the best available device with preference: CUDA -> MPS -> CPU.
+    
+    Returns:
+        torch.device: The best available device.
+    """
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        return torch.device("mps")
+    else:
+        return torch.device("cpu")
+
+
 def mmd(x, y):
     """Memory-efficient MMD implementation in JAX.
 
@@ -44,8 +58,9 @@ def mmd(x, y):
     Returns:
       The MMD distance between x and y embedding sets.
     """
-    x = torch.from_numpy(x)
-    y = torch.from_numpy(y)
+    device = get_device()
+    x = torch.from_numpy(x).to(device)
+    y = torch.from_numpy(y).to(device)
 
     x_sqnorms = torch.diag(torch.matmul(x, x.T))
     y_sqnorms = torch.diag(torch.matmul(y, y.T))
@@ -61,4 +76,5 @@ def mmd(x, y):
         torch.exp(-gamma * (-2 * torch.matmul(y, y.T) + torch.unsqueeze(y_sqnorms, 1) + torch.unsqueeze(y_sqnorms, 0)))
     )
 
-    return _SCALE * (k_xx + k_yy - 2 * k_xy)
+    result = _SCALE * (k_xx + k_yy - 2 * k_xy)
+    return result.cpu()

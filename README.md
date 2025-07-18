@@ -9,12 +9,42 @@ This implementation is a super simple PyTorch port of the [original codebase](ht
 
 ## Setup
 
-First, install PyTorch following instructions from the [official website](https://pytorch.org/).
-
-Then install the depdencies:
+This project uses [uv](https://github.com/astral-sh/uv) for dependency management. If you don't have uv installed, you can install it with:
 
 ```bash
-pip install -r requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then install the dependencies:
+
+```bash
+uv sync
+```
+
+Alternatively, if you prefer pip, you can install the dependencies with:
+
+```bash
+pip install -e .
+```
+
+For development, you can install additional development dependencies:
+
+```bash
+uv sync --extra dev
+```
+
+## Device Support
+
+This implementation automatically selects the best available device with the following preference order:
+
+1. **CUDA** - For NVIDIA GPUs (fastest)
+2. **MPS** - For Apple Silicon Macs (Metal Performance Shaders)
+3. **CPU** - Fallback option
+
+The device selection is handled automatically, so no additional configuration is needed. You can test device selection by running:
+
+```bash
+python test_device.py
 ```
 
 ## Running
@@ -38,7 +68,7 @@ The CMMD value is:  7.696
 This is the same as the original codebase, so, that confirms the implementation correctness 🤗
 
 > [!TIP]
-> GPU execution is supported when a GPU is available.
+> GPU execution is supported when a GPU is available. On Mac with Apple Silicon, MPS acceleration will be used automatically.
 
 ## Results
 

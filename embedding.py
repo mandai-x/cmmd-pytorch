@@ -20,7 +20,20 @@ import torch
 import numpy as np
 
 _CLIP_MODEL_NAME = "openai/clip-vit-large-patch14-336"
-_CUDA_AVAILABLE = torch.cuda.is_available()
+
+
+def get_device():
+    """Get the best available device with preference: CUDA -> MPS -> CPU.
+    
+    Returns:
+        torch.device: The best available device.
+    """
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        return torch.device("mps")
+    else:
+        return torch.device("cpu")
 
 
 def _resize_bicubic(images, size):
@@ -35,10 +48,10 @@ class ClipEmbeddingModel:
 
     def __init__(self):
         self.image_processor = CLIPImageProcessor.from_pretrained(_CLIP_MODEL_NAME)
+        self.device = get_device()
 
         self._model = CLIPVisionModelWithProjection.from_pretrained(_CLIP_MODEL_NAME).eval()
-        if _CUDA_AVAILABLE:
-            self._model = self._model.cuda()
+        self._model = self._model.to(self.device)
 
         self.input_image_size = self.image_processor.crop_size["height"]
 
@@ -63,8 +76,7 @@ class ClipEmbeddingModel:
             do_rescale=False,
             return_tensors="pt",
         )
-        if _CUDA_AVAILABLE:
-            inputs = {k: v.to("cuda") for k, v in inputs.items()}
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         image_embs = self._model(**inputs).image_embeds.cpu()
         image_embs /= torch.linalg.norm(image_embs, axis=-1, keepdims=True)
