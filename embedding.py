@@ -56,28 +56,38 @@ class ClipEmbeddingModel:
         self.input_image_size = self.image_processor.crop_size["height"]
 
     @torch.no_grad()
-    def embed(self, images):
+    def embed(self, images, batch_size=4):
         """Computes CLIP embeddings for the given images.
 
         Args:
           images: An image array of shape (batch_size, height, width, 3). Values are
             in range [0, 1].
+          batch_size: Number of images to process at once to control GPU memory usage.
 
         Returns:
           Embedding array of shape (batch_size, embedding_width).
         """
+        
+        # Process images in batches
+        all_embeddings = []
+        for i in range(0, len(images), batch_size):
+            batch_images = images[i:i + batch_size]
+            
+            batch_images = _resize_bicubic(batch_images, self.input_image_size)
+            inputs = self.image_processor(
+                images=batch_images,
+                do_normalize=True,
+                do_center_crop=False,
+                do_resize=False,
+                do_rescale=False,
+                return_tensors="pt",
+            )
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-        images = _resize_bicubic(images, self.input_image_size)
-        inputs = self.image_processor(
-            images=images,
-            do_normalize=True,
-            do_center_crop=False,
-            do_resize=False,
-            do_rescale=False,
-            return_tensors="pt",
-        )
-        inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
-        image_embs = self._model(**inputs).image_embeds.cpu()
-        image_embs /= torch.linalg.norm(image_embs, axis=-1, keepdims=True)
+            batch_embs = self._model(**inputs).image_embeds.cpu()
+            batch_embs /= torch.linalg.norm(batch_embs, axis=-1, keepdims=True)
+            all_embeddings.append(batch_embs)
+        
+        # Concatenate all batch embeddings
+        image_embs = torch.cat(all_embeddings, dim=0)
         return image_embs
